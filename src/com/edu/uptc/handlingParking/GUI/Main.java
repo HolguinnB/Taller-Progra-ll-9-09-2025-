@@ -1,0 +1,135 @@
+package com.edu.uptc.handlingParking.GUI;
+
+import com.edu.uptc.handlingParking.logic.ParkingManager;
+import com.edu.uptc.handlingParking.model.RecordParking;
+import com.edu.uptc.handlingParking.model.User;
+import com.edu.uptc.handlingParking.model.Vehicle;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        ParkingManager manager = new ParkingManager(
+                "data/vehiclerates.csv",
+                "data/users.dat",
+                "data/appconfig.properties"
+        );
+
+        Scanner sc = new Scanner(System.in);
+
+        System.out.println("==== PARQUEADERO UPTC ====");
+        System.out.print("Usuario: ");
+        String user = sc.nextLine();
+        System.out.print("Contraseña: ");
+        String pass = sc.nextLine();
+
+        if (!manager.login(user, pass)) {
+            System.out.println(" Usuario o contraseña incorrectos.");
+            return;
+        }
+
+        int option;
+        do {
+            System.out.println("\n--- MENÚ PRINCIPAL ---");
+            System.out.println("1. Registrar vehículo");
+            System.out.println("2. Listar vehículos");
+            System.out.println("3. Eliminar vehículo");
+            System.out.println("4. Registrar ingreso/salida (record)");
+            System.out.println("5. Listar registros");
+            System.out.println("6. Reporte ingresos por fecha");
+            System.out.println("7. Agregar usuario");
+            System.out.println("0. Salir");
+            System.out.print("Seleccione: ");
+            option = Integer.parseInt(sc.nextLine());
+
+            try {
+                switch (option) {
+                    case 1: 
+                        System.out.print("Placa: ");
+                        String plate = sc.nextLine();
+                        System.out.print("Tipo: ");
+                        String type = sc.nextLine();
+                        System.out.print("Dueño: ");
+                        String owner = sc.nextLine();
+                        System.out.print("Modelo: ");
+                        String model = sc.nextLine();
+                        System.out.print("Color: ");
+                        String color = sc.nextLine();
+                        
+                        Vehicle v = new Vehicle(plate, type, owner, model, color, 0.0);
+                        manager.addVehicle(v);
+                        System.out.println(" Vehículo agregado.");
+                        break;
+
+                    case 2:
+                        List<Vehicle> vehicles = manager.getVehicles();
+                        if (vehicles.isEmpty()) {
+                            System.out.println("No hay vehículos registrados.");
+                        } else {
+                            vehicles.forEach(System.out::println);
+                        }
+                        break;
+
+                    case 3: 
+                        System.out.print("Placa a eliminar: ");
+                        String delPlate = sc.nextLine();
+                        manager.deleteVehicle(delPlate);
+                        System.out.println(" Vehículo eliminado.");
+                        break;
+
+                    case 4: 
+                        System.out.print("Placa: ");
+                        String recordPlate = sc.nextLine();
+                        System.out.print("Fecha entrada (YYYY-MM-DD): ");
+                        LocalDate entry = LocalDate.parse(sc.nextLine());
+                        System.out.print("Fecha salida (YYYY-MM-DD): ");
+                        LocalDate exit = LocalDate.parse(sc.nextLine());
+                        manager.addRecord(recordPlate, entry, exit);
+                        System.out.println(" Record agregado.");
+                        break;
+
+                    case 5: 
+                        List<RecordParking> records = manager.getRecords();
+                        if (records.isEmpty()) {
+                            System.out.println("No hay registros.");
+                        } else {
+                            records.forEach(System.out::println);
+                        }
+                        break;
+
+                    case 6: 
+                        System.out.print("Fecha (YYYY-MM-DD): ");
+                        LocalDate date = LocalDate.parse(sc.nextLine());
+                        System.out.println("Vehículos en esa fecha: " + manager.countVehiclesByDate(date));
+                        System.out.println("Ingresos totales: " + manager.totalRevenueByDate(date));
+                        break;
+
+                    case 7: 
+                        System.out.print("Nuevo usuario: ");
+                        String newUser = sc.nextLine();
+                        System.out.print("Contraseña: ");
+                        String newPass = sc.nextLine();
+                        List<User> users = manager.getUsers();
+                        users.add(new User(newUser, newPass));
+                        manager.saveUsers(users);
+                        System.out.println(" Usuario agregado.");
+                        break;
+
+                    case 0: 
+                        System.out.println(" Saliendo...");
+                        break;
+
+                    default:
+                        System.out.println(" Opción no válida.");
+                }
+            } catch (Exception e) {
+                System.out.println(" Error: " + e.getMessage());
+            }
+
+        } while (option != 0);
+
+        sc.close();
+    }
+}
