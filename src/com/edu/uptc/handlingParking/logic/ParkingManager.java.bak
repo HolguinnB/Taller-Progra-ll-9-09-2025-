@@ -5,8 +5,7 @@ import com.edu.uptc.handlingParking.persistence.*;
 import com.edu.uptc.handlingParking.enums.ETypeFileEnum;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 public class ParkingManager {
@@ -77,21 +76,13 @@ public class ParkingManager {
     }
 
 
-    public void addRecord(String licensePlate, LocalDateTime entry, LocalDateTime departure) throws Exception {
+    public void addRecord(String licensePlate, LocalDate entry, LocalDate departure) throws Exception {
         Vehicle vehicle = vehiclePersistence.findVehicleByPlate(licensePlate);
         if (vehicle == null) {
             throw new Exception("Vehículo no encontrado.");
         }
 
-        
-        if (departure.isBefore(entry)) {
-            throw new IllegalArgumentException("La hora de salida debe ser posterior a la de entrada.");
-        }
-
-        
-        int minutes=0;
-		long hours = minutes / 60;
-        if (minutes % 60 != 0) hours++; // cobrar fracción como hora completa
+        long hours = ChronoUnit.HOURS.between(entry.atStartOfDay(), departure.atStartOfDay());
         if (hours <= 0) hours = 1; // como minimo 1 hora
 
         double total = vehicle.getPricePerHour() * hours;
@@ -100,8 +91,6 @@ public class ParkingManager {
         recordPersistence.dumpFile(ETypeFileEnum.JSON);
         recordPersistence.dumpFile(ETypeFileEnum.XML);
     }
-
-            
 
     public List<RecordParking> getRecords() {
         return recordPersistence.getListRecords();
@@ -124,14 +113,14 @@ public class ParkingManager {
     public long countVehiclesByDate(LocalDate date) {
         return recordPersistence.getListRecords()
                 .stream()
-                .filter(r -> r.getEntryTime() != null && r.getEntryTime().toLocalDate().equals(date))
+                .filter(r -> r.getEntryTime().equals(date))
                 .count();
     }
 
     public double totalRevenueByDate(LocalDate date) {
         return recordPersistence.getListRecords()
                 .stream()
-                .filter(r -> r.getEntryTime() != null && r.getEntryTime().toLocalDate().equals(date))
+                .filter(r -> r.getEntryTime().equals(date))
                 .mapToDouble(RecordParking::getTotal)
                 .sum();
     }

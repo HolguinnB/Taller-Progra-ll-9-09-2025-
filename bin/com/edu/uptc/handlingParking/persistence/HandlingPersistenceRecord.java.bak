@@ -1,4 +1,4 @@
- package com.edu.uptc.handlingParking.persistence;
+package com.edu.uptc.handlingParking.persistence;
 
 import com.edu.uptc.handlingParking.model.RecordParking;
 import com.edu.uptc.handlingParking.enums.ETypeFileEnum;
@@ -6,7 +6,7 @@ import com.edu.uptc.handlingParking.interfaces.IActionsFile;
 import com.edu.uptc.handlingParking.logic.Config;
 
 import java.io.*;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -15,6 +15,8 @@ public class HandlingPersistenceRecord implements IActionsFile {
 
     private List<RecordParking> listRecords;
     private Config config;
+    private DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
     public HandlingPersistenceRecord() {
         listRecords = new ArrayList<>();
         this.config = new Config("data/appconfig.properties");
@@ -83,8 +85,8 @@ public class HandlingPersistenceRecord implements IActionsFile {
         for (RecordParking r : this.listRecords) {
             records.add("  <record>");
             records.add("    <licensePlate>" + escape(r.getLicensePlate()) + "</licensePlate>");
-            records.add("    <entryTime>" + r.getEntryTime().format(Config.DATETIME_FORMATTER) + "</entryTime>");
-            records.add("    <departureTime>" + r.getDepartureTime().format(Config.DATETIME_FORMATTER) + "</departureTime>");
+            records.add("    <entryTime>" + r.getEntryTime().format(formatter) + "</entryTime>");
+            records.add("    <departureTime>" + r.getDepartureTime().format(formatter) + "</departureTime>");
             records.add("    <total>" + r.getTotal() + "</total>");
             records.add("  </record>");
         }
@@ -103,9 +105,9 @@ public class HandlingPersistenceRecord implements IActionsFile {
             } else if (line.startsWith("<licensePlate>")) {
                 tmp.setLicensePlate(unwrapTag(line, "licensePlate"));
             } else if (line.startsWith("<entryTime>")) {
-                tmp.setEntryTime(LocalDateTime.parse(unwrapTag(line, "entryTime"), Config.DATETIME_FORMATTER));
+                tmp.setEntryTime(LocalDate.parse(unwrapTag(line, "entryTime"), formatter));
             } else if (line.startsWith("<departureTime>")) {
-                tmp.setDepartureTime(LocalDateTime.parse(unwrapTag(line, "departureTime"), Config.DATETIME_FORMATTER));
+                tmp.setDepartureTime(LocalDate.parse(unwrapTag(line, "departureTime"), formatter));
             } else if (line.startsWith("<total>")) {
                 tmp.setTotal(Double.parseDouble(unwrapTag(line, "total")));
             } else if (line.startsWith("</record")) {
@@ -129,8 +131,8 @@ public class HandlingPersistenceRecord implements IActionsFile {
             StringBuilder json = new StringBuilder();
             json.append("{");
             json.append("\"licensePlate\":\"").append(escape(r.getLicensePlate())).append("\",");
-            json.append("\"entryTime\":\"").append(r.getEntryTime().format(Config.DATETIME_FORMATTER)).append("\",");
-            json.append("\"departureTime\":\"").append(r.getDepartureTime().format(Config.DATETIME_FORMATTER)).append("\",");
+            json.append("\"entryTime\":\"").append(r.getEntryTime().format(formatter)).append("\",");
+            json.append("\"departureTime\":\"").append(r.getDepartureTime().format(formatter)).append("\",");
             json.append("\"total\":").append(r.getTotal());
             json.append("}");
             contador++;
@@ -157,28 +159,8 @@ public class HandlingPersistenceRecord implements IActionsFile {
             if (!o.endsWith("}")) o = o + "}";
             Map<String, String> map = parseSimpleJsonObject(o);
             String plate = map.getOrDefault("licensePlate", "");
-            String entryStr = map.getOrDefault("entryTime", "1970-01-01 00:00");
-            LocalDateTime entry;
-            try {
-                entry = LocalDateTime.parse(entryStr, Config.DATETIME_FORMATTER);
-            } catch (Exception __e) {
-                try {
-                    entry = java.time.LocalDate.parse(entryStr, DateTimeFormatter.ofPattern("dd/MM/yyyy")).atStartOfDay();
-                } catch (Exception __e2) {
-                    entry = LocalDateTime.of(1970,1,1,0,0);
-                }
-            }
-            String departureStr = map.getOrDefault("departureTime", "1970-01-01 00:00");
-            LocalDateTime departure;
-            try {
-                departure = LocalDateTime.parse(departureStr, Config.DATETIME_FORMATTER);
-            } catch (Exception __e) {
-                try {
-                    departure = java.time.LocalDate.parse(departureStr, DateTimeFormatter.ofPattern("dd/MM/yyyy")).atStartOfDay();
-                } catch (Exception __e2) {
-                    departure = LocalDateTime.of(1970,1,1,0,0);
-                }
-            }
+            LocalDate entry = LocalDate.parse(map.getOrDefault("entryTime", "01/01/1970"), formatter);
+            LocalDate departure = LocalDate.parse(map.getOrDefault("departureTime", "01/01/1970"), formatter);
             double total = Double.parseDouble(map.getOrDefault("total", "0"));
             this.listRecords.add(new RecordParking(plate, entry, departure, total));
         }
@@ -191,8 +173,8 @@ public class HandlingPersistenceRecord implements IActionsFile {
         for (RecordParking r : this.listRecords) {
             StringBuilder sb = new StringBuilder();
             sb.append(r.getLicensePlate()).append(";");
-            sb.append(r.getEntryTime().format(Config.DATETIME_FORMATTER)).append(";");
-            sb.append(r.getDepartureTime().format(Config.DATETIME_FORMATTER)).append(";");
+            sb.append(r.getEntryTime().format(formatter)).append(";");
+            sb.append(r.getDepartureTime().format(formatter)).append(";");
             sb.append(r.getTotal());
             records.add(sb.toString());
         }
@@ -206,28 +188,8 @@ public class HandlingPersistenceRecord implements IActionsFile {
             StringTokenizer tokens = new StringTokenizer(row, ";");
             try {
                 String plate = tokens.nextToken();
-                String entryStr = tokens.nextToken();
-                String departureStr = tokens.nextToken();
-                LocalDateTime entry;
-                LocalDateTime departure;
-                try {
-                    entry = LocalDateTime.parse(entryStr, Config.DATETIME_FORMATTER);
-                } catch (Exception __e) {
-                    try {
-                        entry = java.time.LocalDate.parse(entryStr, DateTimeFormatter.ofPattern("dd/MM/yyyy")).atStartOfDay();
-                    } catch (Exception __e2) {
-                        entry = LocalDateTime.of(1970,1,1,0,0);
-                    }
-                }
-                try {
-                    departure = LocalDateTime.parse(departureStr, Config.DATETIME_FORMATTER);
-                } catch (Exception __e) {
-                    try {
-                        departure = java.time.LocalDate.parse(departureStr, DateTimeFormatter.ofPattern("dd/MM/yyyy")).atStartOfDay();
-                    } catch (Exception __e2) {
-                        departure = LocalDateTime.of(1970,1,1,0,0);
-                    }
-                }
+                LocalDate entry = LocalDate.parse(tokens.nextToken(), formatter);
+                LocalDate departure = LocalDate.parse(tokens.nextToken(), formatter);
                 double total = Double.parseDouble(tokens.nextToken());
                 this.listRecords.add(new RecordParking(plate, entry, departure, total));
             } catch (Exception e) {

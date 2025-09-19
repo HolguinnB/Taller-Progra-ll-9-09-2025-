@@ -6,21 +6,11 @@ import com.edu.uptc.handlingParking.model.User;
 import com.edu.uptc.handlingParking.model.Vehicle;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Scanner;
 
 public class Main {
-    
-    private static java.time.LocalDateTime parseDateTimeOrNull(String input) {
-        try {
-            return java.time.LocalDateTime.parse(input, com.edu.uptc.handlingParking.logic.Config.DATETIME_FORMATTER);
-        } catch (java.time.format.DateTimeParseException e) {
-            return null;
-        }
-    }
-public static void main(String[] args) {
+    public static void main(String[] args) {
     	
         ParkingManager manager = new ParkingManager(
         		
@@ -95,11 +85,10 @@ public static void main(String[] args) {
                     case 4: 
                         System.out.print("Placa: ");
                         String recordPlate = sc.nextLine();
-                        System.out.print("Fecha entrada (YYYY-MM-DD HH:mm): ");
-                        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
-                        java.time.LocalDateTime entry = LocalDateTime.parse(sc.nextLine(), fmt);
-                        System.out.print("Fecha salida (YYYY-MM-DD HH:mm): ");
-                        java.time.LocalDateTime exit = LocalDateTime.parse(sc.nextLine(), fmt);
+                        System.out.print("Fecha entrada (YYYY-MM-DD): ");
+                        LocalDate entry = LocalDate.parse(sc.nextLine());
+                        System.out.print("Fecha salida (YYYY-MM-DD): ");
+                        LocalDate exit = LocalDate.parse(sc.nextLine());
                         manager.addRecord(recordPlate, entry, exit);
                         System.out.println(" Record agregado.");
                         break;

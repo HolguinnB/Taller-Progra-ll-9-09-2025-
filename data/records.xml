@@ -2,8 +2,8 @@
 <records>
   <record>
     <licensePlate>pl32</licensePlate>
-    <entryTime>04/04/2025</entryTime>
-    <departureTime>09/04/2025</departureTime>
+    <entryTime>2025-04-04 00:00</entryTime>
+    <departureTime>2025-04-09 00:00</departureTime>
     <total>240000.0</total>
   </record>
 </records>
